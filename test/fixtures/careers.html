@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- A fake company careers page used by `npm run try-apply`. The form posts to {{ACTION}}. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Frontend Intern · Example Corp Careers</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    form { display: none; margin-top: 24px; }
+    form.open { display: grid; gap: 12px; }
+    label { display: grid; gap: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Frontend Intern</h1>
+  <p>Example Corp · Bengaluru · 6 months. Build React + TypeScript interfaces with our product team.</p>
+  <button id="show" type="button">Apply now</button>
+
+  <form id="application" data-action="{{ACTION}}">
+    <label for="name">Full name *</label>
+    <input id="name" name="name" required>
+    <label for="email">Email *</label>
+    <input id="email" name="email" type="email" required>
+    <label for="phone">Phone *</label>
+    <input id="phone" name="phone" type="tel" required>
+    <label for="college">College</label>
+    <input id="college" name="college">
+    <label for="gradyear">Graduation year *</label>
+    <select id="gradyear" name="gradyear" required>
+      <option value="">Choose…</option>
+      <option value="2026">2026</option>
+      <option value="2027">2027</option>
+      <option value="2028">2028</option>
+    </select>
+    <fieldset>
+      <legend>Preferred work mode *</legend>
+      <label><input type="radio" name="mode" value="remote" required> Remote</label>
+      <label><input type="radio" name="mode" value="onsite"> On-site in Bengaluru</label>
+      <label><input type="radio" name="mode" value="hybrid"> Hybrid</label>
+    </fieldset>
+    <label for="why">Why do you want to join Example Corp? *</label>
+    <textarea id="why" name="why" required></textarea>
+    <label for="stipend">Expected monthly stipend (INR) *</label>
+    <input id="stipend" name="stipend" type="number" required>
+    <label for="resume">Resume (PDF) *</label>
+    <input id="resume" name="resume" type="file" accept=".pdf" required>
+    <label><input id="privacy" name="privacy" type="checkbox" required> I agree to Example Corp's privacy policy *</label>
+    <label for="referral">How did you hear about us?</label>
+    <input id="referral" name="referral">
+    <button type="submit">Submit application</button>
+  </form>
+
+  <script>
+    const form = document.getElementById("application");
+    document.getElementById("show").onclick = () => form.classList.add("open");
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      try {
+        const res = await fetch(form.dataset.action, { method: "POST", body: new FormData(form) });
+        if (!res.ok) throw new Error(res.status);
+        document.body.innerHTML = "<h1>Thank you for applying!</h1><p>We have received your application.</p>";
+      } catch {
+        document.body.insertAdjacentHTML("beforeend", "<p id='err'>Something went wrong, please try again.</p>");
+      }
+    };
+  </script>
+</body>
+</html>

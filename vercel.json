@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "redirects": [{ "source": "/", "destination": "https://t.me/InternshipRadarr_bot", "permanent": false }],
+  "functions": {
+    "api/telegram.ts": {
+      "maxDuration": 300,
+      "includeFiles": "sandbox/agent.mjs"
+    }
+  },
+  "schedules": {
+    "daily-digest": {
+      "schedule": "30 3 * * *",
+      "path": "/api/run",
+      "requestMethod": "GET"
+    }
+  }
+}

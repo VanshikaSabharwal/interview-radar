@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy · Internship Radar</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="https://t.me/InternshipRadarr_bot">Internship Radar</a><nav><a href="/terms">Terms</a></nav></div></header>
+
+<main class="legal">
+  <div class="wrap narrow">
+    <span class="label">Privacy</span>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Version 2026-11-25 · last updated 25 November 2026</p>
+
+    <div class="summary">
+      <b>The short version</b>
+      <ul>
+        <li>I store only what the bot needs to find jobs and apply for you.</li>
+        <li>Your resume's text is read by an AI service (Groq). Your profile is stored in a database (Upstash).</li>
+        <li>When you tap Apply, your details go to that company. That's the point.</li>
+        <li>No ads, no tracking, no selling your data. Send <b>/delete</b> to erase everything the bot stores.</li>
+      </ul>
+    </div>
+
+    <h2>Who runs this</h2>
+    <p>Internship Radar is a personal hobby project run by an individual developer, not a company. "I" and "me" below means that developer.</p>
+
+    <h2>What the bot stores</h2>
+    <ul>
+      <li><b>Telegram identifiers:</b> your Telegram user ID and chat ID, so the bot can message you.</li>
+      <li><b>Your consent:</b> which version of the terms you agreed to, and when.</li>
+      <li><b>Your profile</b>, extracted from your resume: name, email, phone, city, education, skills, experience, projects, links, and the roles and locations you want.</li>
+      <li><b>A reference to your resume file.</b> The PDF itself stays on Telegram's servers; the bot keeps only Telegram's file ID so it can attach your resume to applications.</li>
+      <li><b>Answers you give</b> to application questions (for example, expected stipend), so the bot doesn't ask twice.</li>
+      <li><b>Jobs and applications:</b> jobs shown to you, and the status of each application.</li>
+      <li><b>Counters</b> for daily limits, and markers of which jobs you've already seen (these contain no personal details and expire within 30 days).</li>
+    </ul>
+    <p>Screenshots of application pages are sent to you in Telegram and are not stored by the bot.</p>
+
+    <h2>How it's used</h2>
+    <p>Only to run the service: build your profile, search for and rank jobs for you, fill in and submit applications you ask for, and message you. No advertising, no profiling for anyone else, no analytics or tracking on this website.</p>
+
+    <h2>Who else processes it</h2>
+    <ul>
+      <li><b>Telegram</b>: delivers messages and stores the resume file you send.</li>
+      <li><b>Groq</b>: the AI that reads your resume text, ranks jobs against your profile, and plans form answers.</li>
+      <li><b>Upstash</b>: the database where your profile and applications are stored.</li>
+      <li><b>Vercel</b>: hosts the bot and this website, and runs the isolated, temporary browser that fills in application forms. Each application uses a fresh browser that is deleted afterwards.</li>
+      <li><b>SearchApi</b>: searches Google Jobs. It receives job titles, locations and company names, not your personal details.</li>
+      <li><b>Companies you apply to</b>: receive your application (your details, answers and resume) on their own website. After that, their privacy policy applies, and you'd need to contact them to change or delete it.</li>
+    </ul>
+    <p>Your data is never sold or shared with anyone else.</p>
+
+    <h2>How long it's kept</h2>
+    <p>Until you send <b>/delete</b>, or until the project shuts down, whichever comes first. "Seen job" markers expire after 30 days. Basic server logs (which include Telegram user IDs but not resume contents) are kept by the hosting provider for a limited time.</p>
+
+    <h2>Your choices</h2>
+    <ul>
+      <li><b>See</b> your profile with /profile and your applications with /saved.</li>
+      <li><b>Correct</b> your profile anytime from /profile, or send a new resume.</li>
+      <li><b>Delete</b> everything the bot stores with /delete. It can't recall applications already sent to companies.</li>
+      <li><b>Withdraw consent</b> by stopping use and sending /delete.</li>
+    </ul>
+
+    <h2>Security</h2>
+    <p>Data is sent over encrypted connections, access keys are kept private, and the form-filling browser is blocked from sending your data anywhere except the company's own website. Still, no system is perfectly secure, and this is a hobby project. Please don't send anything sensitive the bot doesn't ask for, and never passwords, OTPs, Aadhaar/PAN, or bank details.</p>
+
+    <h2>Children</h2>
+    <p>The bot is meant for students aged 18 or older, or younger students using it with a parent's or guardian's permission.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes in an important way, the bot will ask you to agree again.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or requests: <a href="mailto:CONTACT_EMAIL">CONTACT_EMAIL</a>.</p>
+  </div>
+</main>
+
+<footer><div class="wrap"><p>Internship Radar is a personal hobby project, provided as is, with no guarantees of any kind.</p><nav><a href="https://t.me/InternshipRadarr_bot">Open the bot</a><a href="/terms">Terms</a></nav></div></footer>
+</body>
+</html>

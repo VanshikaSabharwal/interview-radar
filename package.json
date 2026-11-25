@@ -1,0 +1,38 @@
+{
+  "name": "internship-radar",
+  "version": "1.0.0",
+  "description": "Daily internship digest: Google Jobs (via SearchApi) -> dedupe (Upstash Redis) -> Telegram.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "once": "tsx --env-file=.env --env-file-if-exists=.env.local scripts/run-once.ts",
+    "fetch": "tsx --env-file=.env scripts/try-fetch.ts",
+    "check": "tsx --env-file=.env scripts/check-setup.ts",
+    "try-resume": "tsx --env-file=.env scripts/try-resume.ts",
+    "try-apply": "tsx --env-file=.env scripts/try-apply.ts",
+    "setup-sandbox": "tsx --env-file=.env --env-file-if-exists=.env.local scripts/setup-sandbox.ts",
+    "bot": "tsx --env-file=.env --env-file-if-exists=.env.local scripts/bot-dev.ts",
+    "set-webhook": "tsx --env-file=.env scripts/set-webhook.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^4.0.86",
+    "@upstash/redis": "^1.35.0",
+    "@vercel/functions": "^3.11.3",
+    "@vercel/sandbox": "^4.1.0",
+    "ai": "^7.0.181",
+    "tldts": "^7.5.6",
+    "unpdf": "^2.2.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.3",
+    "playwright": "^1.65.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
