@@ -9,7 +9,9 @@
  */
 import { config } from "../radar.config.js";
 import { answerQuestion, cancelApplication, STATUS_TEXT, startApplication } from "./apply/apply.js";
-import { listApplications } from "./jobs.js";
+import { listApplications, saveJobs } from "./jobs.js";
+import { formatMatch } from "./matching.js";
+import type { Job } from "./types.js";
 import { findMatchesForStudent } from "./pipeline.js";
 import type { Profile } from "./profile.js";
 import { checkResumeFile, editProfile, parseResume, pdfToText, UserFacingError } from "./resume.js";
@@ -94,6 +96,7 @@ async function onMessage(msg: TgMessage): Promise<void> {
   if (text === "/profile") return showProfile(student);
   if (text === "/jobs") return onJobsCommand(student);
   if (text === "/saved") return showSaved(student);
+  if (text === "/demo") return sendDemo(student);
   if (text === "/terms") return sendMessage(student.chatId, `📄 Terms: ${config.siteUrl}/terms\n🔒 Privacy: ${config.siteUrl}/privacy`);
 
   // Is an application waiting for this student's answer?
@@ -254,6 +257,42 @@ async function sendConsent(student: Student): Promise<void> {
   );
 }
 
+/**
+ * /demo: a pretend job on this project's own demo careers page (public/demo/careers.html),
+ * so anyone can watch a complete, successful application. The demo form posts to
+ * /api/demo-apply, which discards everything. No real company is involved.
+ */
+async function sendDemo(student: Student): Promise<void> {
+  if (!student.profile || !student.resume) {
+    return sendMessage(student.chatId, "📎 Send your resume and confirm your profile first. The demo applies with it.");
+  }
+  const url = `${config.siteUrl}/demo/careers`;
+  const job: Job = {
+    id: `demo-${Date.now().toString(36)}`,
+    title: "Frontend Intern",
+    company: "Radar Demo Company",
+    location: "Bengaluru (demo)",
+    postedAt: "just now",
+    applyLink: url,
+    applyLinks: [{ link: url, source: "Radar Demo Company Careers" }],
+    officialLink: url,
+    summary: "Demo listing: build React + TypeScript interfaces.",
+    demoDomain: new URL(url).hostname,
+  };
+  await saveJobs([job]);
+  await sendMessage(
+    student.chatId,
+    "🧪 <b>Demo</b>: this is a pretend job on Internship Radar's own demo careers page. Tap ✅ Apply to watch a full application, " +
+      "including a question or two. Nothing is sent to a real company.",
+  );
+  await sendMessage(student.chatId, formatMatch({ ...job, score: 99, reason: "A demo match, to show how applying works." }), [
+    [
+      { text: "✅ Apply", data: `apply:${job.id}` },
+      { text: "⏭ Skip", data: `skip:${job.id}` },
+    ],
+  ]);
+}
+
 async function askDelete(student: Student): Promise<void> {
   await sendMessage(student.chatId, "This deletes your profile, resume link, applications and saved answers. Are you sure?", [
     [
@@ -290,6 +329,7 @@ async function sendHelp(student: Student): Promise<void> {
       "/jobs: find matching jobs now\n" +
       "/saved: your applications and their status\n" +
       "/profile: see or fix your profile\n" +
+      "/demo: watch a full test application (no real company)\n" +
       "/terms: terms and privacy policy\n" +
       "/delete: erase all your data\n\n" +
       "Send a new PDF anytime to replace your resume.",

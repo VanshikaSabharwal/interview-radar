@@ -51,7 +51,7 @@ export const config = {
    */
   siteUrl:
     process.env.SITE_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://internship-radar.vercel.app"),
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://interviewradar-seven.vercel.app"),
 
   /** Change this when the terms change, and every student is asked to agree again. */
   termsVersion: "2026-11-25",

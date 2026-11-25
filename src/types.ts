@@ -15,6 +15,8 @@ export interface Job {
   summary?: string;
   /** The apply link on the company's own website, if there is one (set by the pipeline). */
   officialLink?: string;
+  /** Set only for the /demo job: its "official" domain is this project's own site. */
+  demoDomain?: string;
 }
 
 /** A job the AI scored against a student's profile. */

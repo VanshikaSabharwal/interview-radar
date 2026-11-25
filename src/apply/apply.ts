@@ -42,8 +42,8 @@ export async function startApplication(student: Student, jobId: string, messageI
   await showStatus(student, app);
 
   try {
-    // 1. The company's official website.
-    const domain = await findOfficialDomain(job.company);
+    // 1. The company's official website. (The /demo job's "company" is this project's own demo page.)
+    const domain = job.demoDomain ?? (await findOfficialDomain(job.company));
     if (!domain) return handOff(student, app, job, `I couldn't confirm ${job.company}'s official website, so I won't apply for you.`);
     const url = pickOfficialLink(job, domain);
     if (!url) {

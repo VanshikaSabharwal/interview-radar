@@ -89,6 +89,7 @@ export async function setupBotProfile(): Promise<void> {
       { command: "jobs", description: "Find matching jobs now" },
       { command: "saved", description: "Your applications and their status" },
       { command: "profile", description: "See or fix your profile" },
+      { command: "demo", description: "Watch a test application (no real company)" },
       { command: "terms", description: "Terms and privacy policy" },
       { command: "delete", description: "Erase all your data" },
       { command: "help", description: "What I can do" },
