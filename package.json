@@ -23,7 +23,7 @@
     "@ai-sdk/groq": "^4.0.86",
     "@upstash/redis": "^1.35.0",
     "@vercel/functions": "^3.11.3",
-    "@vercel/sandbox": "^4.1.0",
+    "@vercel/sandbox": "4.0.0",
     "ai": "^7.0.181",
     "tldts": "^7.5.6",
     "unpdf": "^2.2.2",
