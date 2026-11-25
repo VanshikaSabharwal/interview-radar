@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Autofill · Internship Radar</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .fill-btn { display: inline-block; margin: 8px 0 4px; padding: 12px 20px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none; cursor: grab; }
+    .steps-list li { margin: 6px 0; }
+    .details { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 14px; }
+    .details dt { color: var(--ink-soft); }
+    .details dd { margin: 0; overflow-wrap: anywhere; }
+    .copy { margin-top: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); color: var(--ink); font: inherit; cursor: pointer; }
+    .note { color: var(--ink-soft); font-size: 14px; }
+    #error { display: none; }
+  </style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="https://t.me/InternshipRadarr_bot">Internship Radar</a><nav><a href="/privacy">Privacy</a></nav></div></header>
+
+<main class="legal">
+  <div class="wrap narrow">
+    <span class="label">One-tap autofill</span>
+    <h1>Fill forms with your details</h1>
+
+    <div id="error" class="summary">
+      <b>This link is missing your details.</b>
+      <p>Open it from the bot: send <b>/autofill</b> in Telegram and tap the link it gives you.</p>
+    </div>
+
+    <div id="ready">
+      <p>Save the button below as a bookmark once. Then, on any application form, click that bookmark and it fills in your name, email, phone, college, links and answers you've given me before. Fields you already typed in are left alone.</p>
+
+      <h2>On a computer</h2>
+      <ol class="steps-list">
+        <li>Show your bookmarks bar (<b>Ctrl+Shift+B</b>, or <b>⌘+Shift+B</b> on a Mac).</li>
+        <li>Drag this button onto the bookmarks bar:<br><a id="bookmarklet" class="fill-btn" href="#">✨ Fill my details</a></li>
+        <li>On an application form, click <b>✨ Fill my details</b>.</li>
+      </ol>
+
+      <h2>On a phone (Chrome)</h2>
+      <ol class="steps-list">
+        <li>Bookmark this page, then edit that bookmark: name it <b>Fill my details</b> and replace its address with the code copied by this button:<br><button id="copy" class="copy" type="button">Copy the code</button></li>
+        <li>On an application form, type <b>Fill my details</b> in the address bar and tap the bookmark.</li>
+      </ol>
+
+      <p class="note">Always check the form before you submit it. The bookmark only fills fields it recognises, and never submits anything.</p>
+
+      <h2>What it fills</h2>
+      <dl id="details" class="details"></dl>
+      <p class="note">These details stay in this link and your bookmark. They're after the "#" in the address, which your browser never sends to our server. If your details change, send /autofill again and replace the bookmark.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+/**
+ * Runs on the application form, inside the bookmark. Must be self-contained:
+ * it's turned into a string with .toString(), so it can't use anything from this page.
+ */
+function radarFill(D) {
+  var A = D.answers || {};
+  var norm = function (t) { return String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); };
+  // Most specific first: "first name" must win over "name".
+  var rules = [
+    ["firstName", /\b(first|given) ?name\b|\bfname\b/],
+    ["lastName", /\b(last|family|sur) ?name\b|\blname\b|\bsurname\b/],
+    ["email", /e ?mail/],
+    ["phone", /phone|mobile|contact (no|number)|\btel\b|whatsapp/],
+    ["linkedin", /linked ?in/],
+    ["github", /git ?hub/],
+    ["portfolio", /portfolio|personal (web)?site|\bwebsite\b/],
+    ["gradYear", /graduat|passing (out )?year|year of (passing|completion)|batch/],
+    ["grade", /cgpa|\bgpa\b|percentage|\bmarks\b|\bgrade\b/],
+    ["field", /branch|major|field of study|speciali[sz]ation|stream|discipline/],
+    ["degree", /degree|qualification|course/],
+    ["college", /college|universit|institut|school/],
+    ["city", /\bcity\b|current location|\blocation\b/],
+    ["name", /\b(full |your |candidate |applicant )?name\b/]
+  ];
+  var labelOf = function (el) {
+    var parts = [];
+    if (el.id) { var l = document.querySelector('label[for="' + CSS.escape(el.id) + '"]'); if (l) parts.push(l.innerText); }
+    var wrap = el.closest("label"); if (wrap) parts.push(wrap.innerText);
+    (el.getAttribute("aria-labelledby") || "").split(/\s+/).forEach(function (id) { var n = id && document.getElementById(id); if (n) parts.push(n.innerText); });
+    parts.push(el.getAttribute("aria-label"), el.placeholder, el.name, el.id, el.getAttribute("autocomplete"));
+    return norm(parts.join(" "));
+  };
+  var setValue = function (el, value) {
+    // Use the browser's own setter so React and similar frameworks notice the change.
+    var proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, "value").set.call(el, value);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  var valueFor = function (label, el) {
+    var key = norm(label);
+    for (var q in A) { var nq = norm(q); if (nq && (key.indexOf(nq) >= 0 || nq.indexOf(key) >= 0) && key.length > 2) return A[q]; }
+    if (el.type === "email") return D.email;
+    if (el.type === "tel") return D.phone;
+    for (var i = 0; i < rules.length; i++) {
+      var k = rules[i][0];
+      if (rules[i][1].test(key) && D[k]) {
+        if (k === "name" && /company|employer|father|mother|guardian|reference|referr/.test(key)) continue;
+        return D[k];
+      }
+    }
+    return null;
+  };
+  var filled = 0;
+  var fields = document.querySelectorAll("input, textarea, select");
+  for (var j = 0; j < fields.length; j++) {
+    var el = fields[j];
+    var type = (el.type || "text").toLowerCase();
+    if (/^(hidden|submit|button|reset|image|file|password|checkbox|radio|search|date)$/.test(type)) continue;
+    if (el.disabled || el.readOnly || (el.tagName !== "SELECT" && el.value)) continue;
+    var r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+    var value = valueFor(labelOf(el), el);
+    if (!value) continue;
+    if (el.tagName === "SELECT") {
+      var want = norm(value), opt = null;
+      for (var o = 0; o < el.options.length; o++) { var t = norm(el.options[o].text); if (t && (t === want || t.indexOf(want) >= 0 || want.indexOf(t) >= 0)) { opt = el.options[o]; break; } }
+      if (!opt || el.value === opt.value) continue;
+      setValue(el, opt.value);
+    } else {
+      setValue(el, String(value));
+    }
+    el.style.outline = "2px solid #2f6b4f";
+    filled++;
+  }
+  var toast = document.createElement("div");
+  toast.textContent = filled ? "✨ Filled " + filled + " field" + (filled === 1 ? "" : "s") + ". Check them before you submit." : "No fields I recognise on this page.";
+  toast.style.cssText = "position:fixed;z-index:2147483647;left:50%;bottom:24px;transform:translateX(-50%);background:#1f1d1a;color:#fff;padding:10px 16px;border-radius:10px;font:14px system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.3)";
+  document.body.appendChild(toast);
+  setTimeout(function () { toast.remove(); }, 4000);
+}
+
+(function () {
+  var data = null;
+  try {
+    var b64 = location.hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");
+    var bytes = Uint8Array.from(atob(b64), function (c) { return c.charCodeAt(0); });
+    data = JSON.parse(new TextDecoder().decode(bytes));
+  } catch (e) { data = null; }
+
+  if (!data || typeof data !== "object") {
+    document.getElementById("error").style.display = "block";
+    document.getElementById("ready").style.display = "none";
+    return;
+  }
+
+  var code = "javascript:" + encodeURIComponent("(" + radarFill.toString() + ")(" + JSON.stringify(data) + ")");
+  var link = document.getElementById("bookmarklet");
+  link.href = code;
+  // Clicking it here would just fill this page; nudge towards dragging instead.
+  link.addEventListener("click", function (e) { e.preventDefault(); link.textContent = "Drag me to your bookmarks bar ↑"; });
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = this;
+    navigator.clipboard.writeText(code).then(function () { btn.textContent = "Copied ✓"; }, function () { btn.textContent = "Couldn't copy. Long-press the button above instead."; });
+  });
+
+  var labels = [["name", "Name"], ["email", "Email"], ["phone", "Phone"], ["city", "City"], ["college", "College"], ["degree", "Degree"], ["field", "Branch"], ["gradYear", "Graduation year"], ["grade", "CGPA / %"], ["linkedin", "LinkedIn"], ["github", "GitHub"], ["portfolio", "Portfolio"]];
+  var dl = document.getElementById("details");
+  var add = function (k, v) { var dt = document.createElement("dt"); dt.textContent = k; var dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); };
+  labels.forEach(function (p) { if (data[p[0]]) add(p[1], data[p[0]]); });
+  var n = Object.keys(data.answers || {}).length;
+  if (n) add("Saved answers", n + " answer" + (n === 1 ? "" : "s") + " from earlier forms");
+})();
+</script>
+</body>
+</html>

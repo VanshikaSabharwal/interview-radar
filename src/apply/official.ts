@@ -60,10 +60,15 @@ export function isOnDomain(url: string, domain: string): boolean {
   }
 }
 
+/** The words that identify a company: "Compitcom Digital Solutions Pvt. Ltd." → ["compitcom"]. */
+export function companyKeywords(company: string): string[] {
+  return company.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w && !GENERIC_WORDS.has(w));
+}
+
 /** Does this domain plausibly belong to this company? ("Jupiter Money" ↔ jupiter.money: yes) */
 export function domainMatchesCompany(domain: string, company: string): boolean {
   const label = domain.split(".")[0].replace(/-/g, ""); // "jupiter" from "jupiter.money"
-  const words = company.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w && !GENERIC_WORDS.has(w));
+  const words = companyKeywords(company);
   if (words.length === 0) return false;
   const compact = words.join(""); // "jupitermoney"
   if (label.length >= 3 && (compact === label || compact.startsWith(label) || label.startsWith(compact))) return true;

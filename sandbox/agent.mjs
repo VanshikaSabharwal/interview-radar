@@ -172,9 +172,22 @@ function scanFields() {
   return fields.slice(0, 60);
 }
 
+/**
+ * Does the page name the company? Used when Google couldn't confirm the company's domain:
+ * a real careers page names its own company (in the title, header, footer or text).
+ */
+async function mentionsCompany(words) {
+  const compact = (t) => (t || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const text = compact(`${await page.title().catch(() => "")} ${await page.locator("body").innerText().catch(() => "")}`);
+  return words.some((w) => w.length >= 3 && text.includes(compact(w))) || text.includes(compact(words.join("")));
+}
+
 async function inspect() {
   await openForm();
   if (!onCompanySite(page.url())) return finish({ status: "blocked", blocker: "off_domain" });
+  if (input.mustMention?.length && !(await mentionsCompany(input.mustMention))) {
+    return finish({ status: "blocked", blocker: "unverified" });
+  }
 
   let fields = await page.evaluate(scanFields);
   let clickApply = false;

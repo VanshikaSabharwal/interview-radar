@@ -9,6 +9,7 @@
  */
 import { config } from "../radar.config.js";
 import { answerQuestion, cancelApplication, STATUS_TEXT, startApplication } from "./apply/apply.js";
+import { autofillData, autofillLink } from "./apply/details.js";
 import { listApplications, saveJobs } from "./jobs.js";
 import { formatMatch } from "./matching.js";
 import type { Job } from "./types.js";
@@ -17,6 +18,7 @@ import type { Profile } from "./profile.js";
 import { checkResumeFile, editProfile, parseResume, pdfToText, UserFacingError } from "./resume.js";
 import {
   deleteStudent,
+  getAnswers,
   getAwaiting,
   getOrCreateStudent,
   getStudent,
@@ -97,6 +99,7 @@ async function onMessage(msg: TgMessage): Promise<void> {
   if (text === "/jobs") return onJobsCommand(student);
   if (text === "/saved") return showSaved(student);
   if (text === "/demo") return sendDemo(student);
+  if (text === "/autofill") return sendAutofill(student);
   if (text === "/terms") return sendMessage(student.chatId, `📄 Terms: ${config.siteUrl}/terms\n🔒 Privacy: ${config.siteUrl}/privacy`);
 
   // Is an application waiting for this student's answer?
@@ -330,9 +333,25 @@ async function sendHelp(student: Student): Promise<void> {
       "/saved: your applications and their status\n" +
       "/profile: see or fix your profile\n" +
       "/demo: watch a full test application (no real company)\n" +
+      "/autofill: a bookmark that fills your details into any form\n" +
       "/terms: terms and privacy policy\n" +
       "/delete: erase all your data\n\n" +
       "Send a new PDF anytime to replace your resume.",
+  );
+}
+
+/** /autofill: the student's personal page that turns their details into a fill-the-form bookmark. */
+async function sendAutofill(student: Student): Promise<void> {
+  if (!student.confirmed || !student.profile) {
+    return sendMessage(student.chatId, "📎 Send your resume and confirm your profile first, then I can make your autofill bookmark.");
+  }
+  const link = autofillLink(autofillData(student.profile, await getAnswers(student.userId)));
+  await sendMessage(
+    student.chatId,
+    "✨ <b>Your autofill bookmark</b>\n\n" +
+      `<a href="${escapeHtml(link)}">Open your autofill page</a> and save the button there as a bookmark (it shows how). ` +
+      "Then, on any application form, tap the bookmark and it fills in your name, email, phone, college, links and answers you've given me.\n\n" +
+      "<i>Your details are inside this link, so don't share it. Send /autofill again after you update your profile.</i>",
   );
 }
 

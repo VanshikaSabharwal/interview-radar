@@ -20,7 +20,8 @@ import { claimAwaiting, clearAwaiting, getAnswers, getAwaiting, saveAnswer, type
 import { downloadFile, editButtons, escapeHtml, sendMessage, sendPhoto } from "../telegram.js";
 import type { Job } from "../types.js";
 import { answerKey, planAnswers } from "./answers.js";
-import { findOfficialDomain, pickOfficialLink } from "./official.js";
+import { autofillData, detailLines } from "./details.js";
+import { companyKeywords, domainOf, findOfficialDomain, isCompanySiteCandidate, pickOfficialLink } from "./official.js";
 import { type AgentResult, runAgent } from "./runner.js";
 
 /** Called when the student taps ✅ Apply. */
@@ -43,7 +44,12 @@ export async function startApplication(student: Student, jobId: string, messageI
 
   try {
     // 1. The company's official website. (The /demo job's "company" is this project's own demo page.)
-    const domain = job.demoDomain ?? (await findOfficialDomain(job.company));
+    //    Google confirms it for most companies. Small ones often don't show up, so then we fall back to
+    //    the listing's own domain (it already looks like the company's name and isn't a job board), and
+    //    the browser must find the company's name on that page before we go any further.
+    const confirmed = job.demoDomain ?? (await findOfficialDomain(job.company));
+    const listingDomain = job.officialLink ? domainOf(job.officialLink) : null;
+    const domain = confirmed ?? (isCompanySiteCandidate(listingDomain, job.company) ? listingDomain : null);
     if (!domain) return handOff(student, app, job, `I couldn't confirm ${job.company}'s official website, so I won't apply for you.`);
     const url = pickOfficialLink(job, domain);
     if (!url) {
@@ -52,7 +58,12 @@ export async function startApplication(student: Student, jobId: string, messageI
 
     // 2. Look at the form.
     await sendMessage(student.chatId, `🔎 Opening <b>${escapeHtml(job.company)}</b>'s careers page on <b>${escapeHtml(domain)}</b>…`);
-    const { result } = await runAgent({ mode: "inspect", url, domain });
+    const { result } = await runAgent({
+      mode: "inspect",
+      url,
+      domain,
+      ...(confirmed ? {} : { mustMention: companyKeywords(job.company) }),
+    });
     if (result.status !== "ok" || !result.fields) return handOff(student, app, job, explainBlocker(result, job), url);
 
     // 3. Plan the answers.
@@ -212,10 +223,18 @@ async function handOff(student: Student, app: Application, job: Job, reason: str
     .filter((f) => f.type !== "file" && f.value !== "true")
     .map((f) => `• <b>${escapeHtml(f.label.slice(0, 80))}</b>: ${escapeHtml(f.value.slice(0, 400))}`)
     .join("\n");
+  // Even when we stopped before seeing the form, the student gets their everyday details to copy.
+  const details = student.profile
+    ? detailLines(autofillData(student.profile))
+        .map(([label, value]) => `• <b>${escapeHtml(label)}</b>: <code>${escapeHtml(value.slice(0, 200))}</code>`)
+        .join("\n")
+    : "";
   const text =
     `🙋 <b>Please apply to this one yourself</b>\n<b>${escapeHtml(job.title)}</b> — ${escapeHtml(job.company)}\n\n` +
     `<b>Why:</b> ${escapeHtml(reason)}\n\n👉 <a href="${escapeHtml(link ?? job.applyLink)}">Open the application</a>` +
-    (answers ? `\n\n<b>Your answers, ready to copy:</b>\n${answers}` : "");
+    (answers ? `\n\n<b>Answers for this form, ready to copy:</b>\n${answers}` : "") +
+    (details ? `\n\n<b>Your details</b> <i>(tap one to copy)</i>:\n${details}` : "") +
+    `\n\n✨ Tip: /autofill gives you a bookmark that fills these into the form for you.`;
   if (screenshot) await sendPhoto(student.chatId, screenshot, "What the page looked like").catch(() => {});
   await sendMessage(student.chatId, text.slice(0, 4000));
 }
@@ -229,6 +248,8 @@ function explainBlocker(result: AgentResult, job: Job): string {
     case "off_domain":
     case "off_domain_form":
       return `${job.company}'s application form is on another website${result.detail ? ` (${result.detail})` : ""}, not their own. I only apply on official company sites.`;
+    case "unverified":
+      return `I couldn't confirm ${job.company}'s official website, and the page I opened doesn't mention ${job.company}, so I won't apply for you.`;
     case "no_form":
       return "I couldn't find an application form on the page. It may need extra clicks, or the listing may be closed.";
     default:

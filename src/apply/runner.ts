@@ -40,12 +40,13 @@ export interface Fill {
 }
 
 export type AgentInput =
-  | { mode: "inspect"; url: string; domain: string }
+  /** mustMention: the page must contain one of these company words (used when Google couldn't confirm the domain) */
+  | { mode: "inspect"; url: string; domain: string; mustMention?: string[] }
   | { mode: "submit"; url: string; domain: string; clickApply: boolean; fills: Fill[] };
 
 export interface AgentResult {
   status: "ok" | "blocked" | "submitted" | "needs_human" | "failed" | "unconfirmed" | "error";
-  blocker?: "captcha" | "login" | "off_domain" | "off_domain_form" | "no_form";
+  blocker?: "captcha" | "login" | "off_domain" | "off_domain_form" | "no_form" | "unverified";
   reason?: string;
   detail?: string;
   fields?: FormField[];
