@@ -13,3 +13,4 @@ import { groq } from "@ai-sdk/groq";
 
 // gpt-oss-120b on Groq supports strict JSON-schema output, which we rely on.
 export const model = groq(process.env.AI_MODEL ?? "openai/gpt-oss-120b");
+
